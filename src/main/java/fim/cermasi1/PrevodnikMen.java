@@ -1,12 +1,16 @@
 package fim.cermasi1;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListDataListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 public class PrevodnikMen extends JFrame {
-    public JPanel mainPanel, topGrid;
+    public JPanel mainPanel, topGrid, resultPanel;
     public JLabel lInput, lcombox, lcalculate, lresult;
     public JTextField quantity;
     public JButton convert;
@@ -15,34 +19,25 @@ public class PrevodnikMen extends JFrame {
 
     public PrevodnikMen(){
         List<Currency> currencies = new CurrencyReader().getCurrencies();
-        System.out.println(currencies);
-
         mainPanel = new JPanel();
 
         topGrid = new JPanel();
         topGrid.setLayout(new GridLayout(2,3));
 
-        // Labels
+        // First row - Just labels
         lInput = new JLabel("Množství");
         lcombox = new JLabel("Měna");
         lcalculate = new JLabel("Konverze");
 
-        // Text field
+        // Second row - Amount, combo box, button
         quantity = new JTextField();
 
-        // ComboBox
         comboBox = new JComboBox<>();
-        comboModel = new ComboCurrencyModel(currencies);
+        comboModel = new ComboCurrencyModel(currencies, this);
         comboBox.setModel(comboModel);
 
-        // Button
         convert = new JButton("Převést");
-        convert.addActionListener(e -> {
-            Currency c = (Currency) comboBox.getSelectedItem();
-            assert c != null;
-            double result = Double.parseDouble(quantity.getText()) * c.getCourse();
-            lresult.setText("Výsledek: " + result);
-        });
+        setEventListeners();
 
         // Add components to the top grid
         topGrid.add(lInput);
@@ -53,18 +48,57 @@ public class PrevodnikMen extends JFrame {
         topGrid.add(convert);
 
         // Result
-        lresult = new JLabel("Výsledek:");
+        lresult = new JLabel("Výsledek:", SwingConstants.LEFT);
+
+        resultPanel = new JPanel();
+        resultPanel.setLayout(new FlowLayout());
+        resultPanel.add(lresult);
 
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.add(topGrid);
-        mainPanel.add(lresult);
 
-
-
+        mainPanel.add(resultPanel);
 
         add(mainPanel);
         pack();
         setVisible(true);
     }
 
+    private void setEventListeners() {
+        // NAVÍC: listenery pro automatické změny currency resultu pro combobox a input box
+        convert.addActionListener(e -> {
+            updateCurrencyResult();
+        });
+
+        quantity.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateCurrencyResult();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateCurrencyResult();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateCurrencyResult();
+            }
+        });
+    }
+    public void updateCurrencyResult(){
+        Currency c = (Currency) comboBox.getSelectedItem();
+        assert c != null;
+        try {
+            double result = Double.parseDouble(quantity.getText()) * (c.getCourse()/c.getQuantity());
+
+            result = Math.round(result * 100.0) / 100.0;
+            
+            lresult.setText("Výsledek: " + result+ " Kč");
+        }
+        catch (NumberFormatException exception){
+            lresult.setText("Musíte zadat číslo pro výpočet měny");
+        }
+    }
 }

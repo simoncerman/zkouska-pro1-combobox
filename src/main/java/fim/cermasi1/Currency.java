@@ -18,6 +18,7 @@ public class Currency {
     public double getCourse(){
         return course;
     }
+    public double getQuantity(){return quantity;}
 
     // To string will be used in the combobox (it is Country - code)
     @Override

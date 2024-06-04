@@ -8,9 +8,11 @@ public class ComboCurrencyModel<E> implements ComboBoxModel {
 
     private List<Currency> items;
     private Currency selectedItem;
+    private PrevodnikMen p;
 
-    public ComboCurrencyModel(List<Currency> items) {
+    public ComboCurrencyModel(List<Currency> items, PrevodnikMen p) {
         this.items = items;
+        this.p = p;
         if (!items.isEmpty()) {
             selectedItem = items.get(0);
         }
@@ -19,6 +21,7 @@ public class ComboCurrencyModel<E> implements ComboBoxModel {
     @Override
     public void setSelectedItem(Object anItem) {
         selectedItem = (Currency) anItem;
+        p.updateCurrencyResult();
     }
 
     @Override
